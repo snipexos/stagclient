@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>StagClient — unofficial ZČU STAG app</title>
+<style>
+  /*
+    Theme: :root carries the light palette (the default, unconditional
+    truth). Dark-via-system is a MEDIA override, guarded by
+    :not([data-theme="light"]) so an explicit light pick still wins even
+    when the OS is dark. Dark-via-toggle is an ATTRIBUTE override
+    ([data-theme="dark"]) so the toggle wins in both directions regardless
+    of the OS setting. This three-layer shape is what lets the toggle,
+    system preference, and default all coexist without fighting each
+    other — see the toggleTheme() script at the bottom for how the
+    attribute gets set.
+  */
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1a1a1a;
+    --muted: #6b6b6b;
+    --card: #f5f5f7;
+    --accent: #0b6efd;
+    --accent-fg: #ffffff;
+    --border: #e5e5e7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121212;
+      --fg: #f2f2f2;
+      --muted: #a0a0a0;
+      --card: #1c1c1e;
+      --accent: #3d8bff;
+      --accent-fg: #05121f;
+      --border: #2c2c2e;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121212;
+    --fg: #f2f2f2;
+    --muted: #a0a0a0;
+    --card: #1c1c1e;
+    --accent: #3d8bff;
+    --accent-fg: #05121f;
+    --border: #2c2c2e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; padding: 20px 20px 80px; }
+
+  /* Top-right controls */
+  .topbar { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 28px; }
+  .toggle-group {
+    display: inline-flex;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 3px;
+    gap: 2px;
+  }
+  .toggle-group button {
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .toggle-group button.active { background: var(--accent); color: var(--accent-fg); }
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--fg);
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 13px;
+    color: var(--muted);
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 18px;
+  }
+  h1 { font-size: 2.1rem; margin: 0 0 10px; letter-spacing: -0.02em; }
+  p.lead { color: var(--muted); font-size: 1.05rem; line-height: 1.55; max-width: 60ch; }
+  .cta {
+    margin-top: 28px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: var(--accent-fg);
+    text-decoration: none;
+    font-weight: 600;
+    padding: 13px 22px;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: opacity .15s ease;
+  }
+  .btn:active { opacity: .8; }
+  .btn.secondary {
+    background: transparent;
+    color: var(--fg);
+    border: 1px solid var(--border);
+  }
+  #version-note { font-size: 13px; color: var(--muted); margin-top: 10px; }
+  section { margin-top: 56px; }
+  h2 { font-size: 1.3rem; margin: 0 0 14px; }
+
+  /* Installing — a native <details> dropdown, not a static list, so it
+     doesn't compete for vertical space with everything else on the page.
+     Defaults open (it's the single most important thing a new visitor
+     needs) but collapsible for a returning visitor who already knows it. */
+  .install-details {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .install-details summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 700;
+    font-size: 1.05rem;
+  }
+  .install-details summary::-webkit-details-marker { display: none; }
+  .install-details summary .chevron { transition: transform .15s ease; color: var(--muted); }
+  .install-details[open] summary .chevron { transform: rotate(180deg); }
+  .steps { padding: 0 16px 16px; list-style: none; margin: 0; display: grid; gap: 12px; }
+  .steps li {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    line-height: 1.5;
+  }
+  .steps .n {
+    flex: none;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--accent-fg);
+    font-size: 13px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Screenshots — a horizontal, swipeable, snapping carousel (Play Store
+     style) instead of a wrapping grid. overflow-x:auto + scroll-snap is
+     native, no JS/library needed; the negative margin + padding trick lets
+     the row bleed to the viewport edge on mobile while the rest of the
+     page stays inside .wrap's max-width. */
+  .shots {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding: 4px 4px 14px;
+    margin: 0 -4px;
+    scrollbar-width: thin;
+  }
+  .shot {
+    flex: 0 0 auto;
+    width: 42vw;
+    max-width: 220px;
+    min-width: 140px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    scroll-snap-align: start;
+  }
+  .shots img {
+    width: 100%;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    display: block;
+  }
+  .shot figcaption { margin: 0; font-size: 13px; color: var(--muted); text-align: center; }
+
+  footer {
+    margin-top: 70px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  footer a { color: inherit; }
+  code {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: 0.9em;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="toggle-group" id="lang-toggle" role="group" aria-label="Language">
+      <button type="button" data-lang="en">EN</button>
+      <button type="button" data-lang="cs">CZ</button>
+    </div>
+    <button type="button" class="icon-btn" id="theme-toggle" aria-label="Toggle theme">🌓</button>
+  </div>
+
+  <span class="badge" data-i18n="badge">Unofficial · ZČU STAG</span>
+  <h1>StagClient</h1>
+  <p class="lead" data-i18n="lead">
+    A fast, native Android app for ZČU's STAG system — schedule, exams, grades,
+    canteen menu and your university account balance, talking directly to
+    STAG's own API instead of going through the official ISSTAG app.
+  </p>
+
+  <div class="cta">
+    <a id="install-btn" class="btn" href="https://github.com/snipexos/stagclient/releases/latest">
+      ⬇ <span data-i18n="install_btn">Install latest version</span>
+    </a>
+    <a class="btn secondary" href="https://github.com/snipexos/stagclient/releases" data-i18n="all_releases">All releases</a>
+  </div>
+  <div id="version-note" data-i18n="checking">Checking latest version…</div>
+
+  <section>
+    <details class="install-details" open>
+      <summary><span data-i18n="installing_title">Installing</span> <span class="chevron">▾</span></summary>
+      <ul class="steps">
+        <li><span class="n">1</span> <span data-i18n="step1">Tap "Install latest version" above — this downloads the APK file straight to your phone.</span></li>
+        <li><span class="n">2</span> <span data-i18n="step2">Open the downloaded file. Android will warn about installing from an unknown source the first time — allow it for your browser/files app.</span></li>
+        <li><span class="n">3</span> <span data-i18n="step3">Install, open, log in with your ZČU credentials. That's it.</span></li>
+        <li><span class="n">4</span> <span data-i18n="step4">The app checks for new versions itself from then on and offers to update in place.</span></li>
+      </ul>
+    </details>
+  </section>
+
+  <section>
+    <h2 data-i18n="screenshots_title">Screenshots</h2>
+    <div class="shots">
+      <figure class="shot"><img src="images/home.jpg" alt="Home tab" loading="lazy" /><figcaption data-i18n="shot_home">Home</figcaption></figure>
+      <figure class="shot"><img src="images/schedule-grid.png" alt="Schedule — Grid view" loading="lazy" /><figcaption data-i18n="shot_grid">Schedule · Grid</figcaption></figure>
+      <figure class="shot"><img src="images/schedule-agenda.png" alt="Schedule — Day view" loading="lazy" /><figcaption data-i18n="shot_day">Schedule · Day</figcaption></figure>
+      <figure class="shot"><img src="images/schedule-agenda-2.png" alt="Schedule — Agenda view" loading="lazy" /><figcaption data-i18n="shot_agenda">Schedule · Agenda</figcaption></figure>
+      <figure class="shot"><img src="images/student-tab.png" alt="Student tab" loading="lazy" /><figcaption data-i18n="shot_student">Student</figcaption></figure>
+      <figure class="shot"><img src="images/grade-calc.png" alt="Grade calculator" loading="lazy" /><figcaption data-i18n="shot_grades">Grade calculator</figcaption></figure>
+      <figure class="shot"><img src="images/menu.jpg" alt="Menu" loading="lazy" /><figcaption data-i18n="shot_menu">Menu</figcaption></figure>
+      <figure class="shot"><img src="images/harmonogram.jpg" alt="Harmonogram" loading="lazy" /><figcaption data-i18n="shot_harmonogram">Harmonogram</figcaption></figure>
+    </div>
+  </section>
+
+  <!-- Rebuilt by applyLang() from footer_prefix/footer_link (not a plain
+       [data-i18n] target) since it needs to keep the nested <a> intact. -->
+  <footer>
+    Unofficial, community-made. Not affiliated with ZČU or IS/STAG.
+    Source and release notes: <a href="https://github.com/snipexos/stagclient/releases">releases page</a>.
+  </footer>
+</div>
+
+<script>
+  // ---- i18n ----------------------------------------------------------
+  // Plain client-side swap (no page reload) — walks every [data-i18n]
+  // element and replaces its text, keeping any nested markup (like the
+  // footer's <a>) intact by only touching the FIRST text node, not
+  // innerHTML wholesale.
+  var STRINGS = {
+    en: {
+      badge: "Unofficial · ZČU STAG",
+      lead: "A fast, native Android app for ZČU's STAG system — schedule, exams, grades, canteen menu and your university account balance, talking directly to STAG's own API instead of going through the official ISSTAG app.",
+      install_btn: "Install latest version",
+      all_releases: "All releases",
+      checking: "Checking latest version…",
+      latest_version: "Latest version: ",
+      no_apk: "Latest release has no APK attached yet.",
+      no_release: "No release published yet — check back soon.",
+      installing_title: "Installing",
+      step1: "Tap \"Install latest version\" above — this downloads the APK file straight to your phone.",
+      step2: "Open the downloaded file. Android will warn about installing from an unknown source the first time — allow it for your browser/files app.",
+      step3: "Install, open, log in with your ZČU credentials. That's it.",
+      step4: "The app checks for new versions itself from then on and offers to update in place.",
+      screenshots_title: "Screenshots",
+      shot_home: "Home",
+      shot_grid: "Schedule · Grid",
+      shot_day: "Schedule · Day",
+      shot_agenda: "Schedule · Agenda",
+      shot_student: "Student",
+      shot_grades: "Grade calculator",
+      shot_menu: "Menu",
+      shot_harmonogram: "Harmonogram",
+      footer_prefix: "Unofficial, community-made. Not affiliated with ZČU or IS/STAG. Source and release notes: ",
+      footer_link: "releases page",
+    },
+    cs: {
+      badge: "Neoficiální · ZČU STAG",
+      lead: "Rychlá nativní Android aplikace pro systém STAG na ZČU — rozvrh, zkoušky, známky, jídelníček menzy a stav univerzitního konta, komunikuje přímo s API systému STAG místo přes oficiální aplikaci ISSTAG.",
+      install_btn: "Stáhnout nejnovější verzi",
+      all_releases: "Všechny verze",
+      checking: "Zjišťuji nejnovější verzi…",
+      latest_version: "Nejnovější verze: ",
+      no_apk: "Nejnovější verze zatím nemá přiložený instalační soubor.",
+      no_release: "Zatím nebyla vydána žádná verze — zkuste to prosím později.",
+      installing_title: "Instalace",
+      step1: "Klepněte výše na „Stáhnout nejnovější verzi“ — instalační soubor se stáhne přímo do telefonu.",
+      step2: "Otevřete stažený soubor. Android při první instalaci z neznámého zdroje zobrazí varování — povolte to prohlížeči nebo správci souborů.",
+      step3: "Nainstalujte, otevřete a přihlaste se svými přihlašovacími údaji ZČU. To je vše.",
+      step4: "Aplikace si od té chvíle sama hlídá nové verze a nabídne rovnou aktualizaci.",
+      screenshots_title: "Snímky obrazovky",
+      shot_home: "Domů",
+      shot_grid: "Rozvrh · Tabulka",
+      shot_day: "Rozvrh · Den",
+      shot_agenda: "Rozvrh · Agenda",
+      shot_student: "Student",
+      shot_grades: "Kalkulačka průměru",
+      shot_menu: "Nabídka",
+      shot_harmonogram: "Harmonogram",
+      footer_prefix: "Neoficiální, komunitní projekt. Nesouvisí se ZČU ani IS/STAG. Zdrojový kód a poznámky k verzím: ",
+      footer_link: "stránka verzí",
+    },
+  };
+
+  var LANG_KEY = "stagclient-lang";
+  var THEME_KEY = "stagclient-theme";
+
+  function applyLang(lang) {
+    var dict = STRINGS[lang] || STRINGS.en;
+    document.documentElement.lang = lang;
+    document.querySelectorAll("[data-i18n]").forEach(function (el) {
+      var key = el.getAttribute("data-i18n");
+      if (dict[key] !== undefined) el.textContent = dict[key];
+    });
+    // Footer keeps its nested <a> — rebuilt from two translated pieces
+    // instead of being a single [data-i18n] textContent target.
+    var footer = document.querySelector("footer");
+    var link = footer.querySelector("a");
+    footer.firstChild.textContent = dict.footer_prefix;
+    link.textContent = dict.footer_link;
+    document.querySelectorAll("#lang-toggle button").forEach(function (btn) {
+      btn.classList.toggle("active", btn.getAttribute("data-lang") === lang);
+    });
+    localStorage.setItem(LANG_KEY, lang);
+    window.__stagclientLang = lang;
+    if (window.__stagclientApplyVersionNote) window.__stagclientApplyVersionNote();
+  }
+
+  function initLang() {
+    var saved = null;
+    try { saved = localStorage.getItem(LANG_KEY); } catch (e) {}
+    var lang = saved || (navigator.language && navigator.language.toLowerCase().indexOf("cs") === 0 ? "cs" : "en");
+    applyLang(lang);
+    document.querySelectorAll("#lang-toggle button").forEach(function (btn) {
+      btn.addEventListener("click", function () { applyLang(btn.getAttribute("data-lang")); });
+    });
+  }
+
+  // ---- Theme -----------------------------------------------------------
+  function applyTheme(theme) {
+    if (theme) document.documentElement.setAttribute("data-theme", theme);
+    else document.documentElement.removeAttribute("data-theme");
+    try { if (theme) localStorage.setItem(THEME_KEY, theme); else localStorage.removeItem(THEME_KEY); } catch (e) {}
+  }
+
+  function initTheme() {
+    var saved = null;
+    try { saved = localStorage.getItem(THEME_KEY); } catch (e) {}
+    if (saved) applyTheme(saved);
+    document.getElementById("theme-toggle").addEventListener("click", function () {
+      var current = document.documentElement.getAttribute("data-theme");
+      var systemDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      // Cycle: whatever's currently effectively shown -> the opposite,
+      // explicit — never leaves the toggle "stuck" relative to system.
+      var effectiveDark = current ? current === "dark" : systemDark;
+      applyTheme(effectiveDark ? "light" : "dark");
+    });
+  }
+
+  // ---- Version check ---------------------------------------------------
+  (function () {
+    var btn = document.getElementById('install-btn');
+    var note = document.getElementById('version-note');
+    var latestRelease = null;
+    window.__stagclientApplyVersionNote = function () {
+      var dict = STRINGS[window.__stagclientLang] || STRINGS.en;
+      if (!latestRelease) return;
+      var apk = (latestRelease.assets || []).find(function (a) { return a.name.endsWith('.apk'); });
+      if (apk) {
+        btn.href = apk.browser_download_url;
+        note.textContent = dict.latest_version + (latestRelease.name || latestRelease.tag_name);
+      } else {
+        note.textContent = dict.no_apk;
+      }
+    };
+    fetch('https://api.github.com/repos/snipexos/stagclient/releases/latest')
+      .then(function (r) { if (!r.ok) throw new Error('no releases yet'); return r.json(); })
+      .then(function (release) {
+        latestRelease = release;
+        window.__stagclientApplyVersionNote();
+      })
+      .catch(function () {
+        var dict = STRINGS[window.__stagclientLang] || STRINGS.en;
+        note.textContent = dict.no_release;
+      });
+  })();
+
+  initTheme();
+  initLang();
+</script>
+</body>
+</html>
