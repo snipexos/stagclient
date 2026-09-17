@@ -4,8 +4,7 @@
 
 A fast, native Android app for ZČU's STAG system — schedule, exams,
 grades, canteen menu and your university account balance, talking
-directly to STAG's own API instead of going through the official ISSTAG
-app.
+directly to STAG's own API.
 
 **[⬇ Install the latest version](https://github.com/snipexos/stagclient/releases/latest)** · [All releases](https://github.com/snipexos/stagclient/releases)
 
