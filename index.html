@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>StagClient — unofficial ZČU STAG app</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1a1a1a;
+    --muted: #6b6b6b;
+    --card: #f5f5f7;
+    --accent: #0b6efd;
+    --accent-fg: #ffffff;
+    --border: #e5e5e7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121212;
+      --fg: #f2f2f2;
+      --muted: #a0a0a0;
+      --card: #1c1c1e;
+      --accent: #3d8bff;
+      --accent-fg: #05121f;
+      --border: #2c2c2e;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; padding: 56px 20px 80px; }
+  .badge {
+    display: inline-block;
+    font-size: 13px;
+    color: var(--muted);
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 18px;
+  }
+  h1 { font-size: 2.1rem; margin: 0 0 10px; letter-spacing: -0.02em; }
+  p.lead { color: var(--muted); font-size: 1.05rem; line-height: 1.55; max-width: 60ch; }
+  .cta {
+    margin-top: 28px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: var(--accent-fg);
+    text-decoration: none;
+    font-weight: 600;
+    padding: 13px 22px;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: opacity .15s ease;
+  }
+  .btn:active { opacity: .8; }
+  .btn.secondary {
+    background: transparent;
+    color: var(--fg);
+    border: 1px solid var(--border);
+  }
+  #version-note { font-size: 13px; color: var(--muted); margin-top: 10px; }
+  section { margin-top: 56px; }
+  h2 { font-size: 1.3rem; margin-bottom: 14px; }
+  .steps { padding-left: 0; list-style: none; margin: 0; display: grid; gap: 12px; }
+  .steps li {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    line-height: 1.5;
+  }
+  .steps .n {
+    flex: none;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--accent-fg);
+    font-size: 13px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .shots {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+  }
+  .shots img {
+    width: 100%;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    display: block;
+  }
+  .shots .placeholder {
+    aspect-ratio: 9 / 19.5;
+    border-radius: 14px;
+    border: 1px dashed var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 13px;
+    text-align: center;
+    padding: 12px;
+  }
+  footer {
+    margin-top: 70px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  footer a { color: inherit; }
+  code {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: 0.9em;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="badge">Unofficial · ZČU STAG</span>
+  <h1>StagClient</h1>
+  <p class="lead">
+    A fast, native Android app for ZČU's STAG system — schedule, exams, grades,
+    canteen menu and your university account balance, talking directly to
+    STAG's own API instead of going through the official ISSTAG app.
+  </p>
+
+  <div class="cta">
+    <a id="install-btn" class="btn" href="https://github.com/snipexos/stagclient/releases/latest">
+      ⬇ Install latest version
+    </a>
+    <a class="btn secondary" href="https://github.com/snipexos/stagclient/releases">All releases</a>
+  </div>
+  <div id="version-note">Checking latest version…</div>
+
+  <section>
+    <h2>Installing</h2>
+    <ul class="steps">
+      <li><span class="n">1</span> Tap "Install latest version" above — this downloads the APK file straight to your phone.</li>
+      <li><span class="n">2</span> Open the downloaded file. Android will warn about installing from an unknown source the first time — allow it for your browser/files app.</li>
+      <li><span class="n">3</span> Install, open, log in with your ZČU credentials. That's it.</li>
+      <li><span class="n">4</span> The app checks for new versions itself from then on and offers to update in place — no need to come back here again.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Screenshots</h2>
+    <div class="shots">
+      <div class="placeholder">Home</div>
+      <div class="placeholder">Schedule</div>
+      <div class="placeholder">Grades</div>
+    </div>
+  </section>
+
+  <footer>
+    Unofficial, community-made. Not affiliated with ZČU or IS/STAG.
+    Source and release notes: <a href="https://github.com/snipexos/stagclient/releases">releases page</a>.
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var btn = document.getElementById('install-btn');
+    var note = document.getElementById('version-note');
+    fetch('https://api.github.com/repos/snipexos/stagclient/releases/latest')
+      .then(function (r) { if (!r.ok) throw new Error('no releases yet'); return r.json(); })
+      .then(function (release) {
+        var apk = (release.assets || []).find(function (a) { return a.name.endsWith('.apk'); });
+        if (apk) {
+          btn.href = apk.browser_download_url;
+          note.textContent = 'Latest version: ' + (release.name || release.tag_name);
+        } else {
+          note.textContent = 'Latest release has no APK attached yet.';
+        }
+      })
+      .catch(function () {
+        note.textContent = 'No release published yet — check back soon.';
+      });
+  })();
+</script>
+</body>
+</html>
