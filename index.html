@@ -107,18 +107,8 @@
     border: 1px solid var(--border);
     display: block;
   }
-  .shots .placeholder {
-    aspect-ratio: 9 / 19.5;
-    border-radius: 14px;
-    border: 1px dashed var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--muted);
-    font-size: 13px;
-    text-align: center;
-    padding: 12px;
-  }
+  .shot { display: flex; flex-direction: column; gap: 8px; margin: 0; }
+  .shot figcaption { margin: 0; font-size: 13px; color: var(--muted); text-align: center; }
   footer {
     margin-top: 70px;
     padding-top: 20px;
@@ -168,9 +158,14 @@
   <section>
     <h2>Screenshots</h2>
     <div class="shots">
-      <div class="placeholder">Home</div>
-      <div class="placeholder">Schedule</div>
-      <div class="placeholder">Grades</div>
+      <figure class="shot"><img src="images/home.jpg" alt="Home tab" loading="lazy" /><figcaption>Home</figcaption></figure>
+      <figure class="shot"><img src="images/schedule-grid.png" alt="Schedule — Grid view" loading="lazy" /><figcaption>Schedule · Grid</figcaption></figure>
+      <figure class="shot"><img src="images/schedule-agenda.png" alt="Schedule — Day view" loading="lazy" /><figcaption>Schedule · Day</figcaption></figure>
+      <figure class="shot"><img src="images/schedule-agenda-2.png" alt="Schedule — Agenda view" loading="lazy" /><figcaption>Schedule · Agenda</figcaption></figure>
+      <figure class="shot"><img src="images/student-tab.png" alt="Student tab" loading="lazy" /><figcaption>Student</figcaption></figure>
+      <figure class="shot"><img src="images/grade-calc.png" alt="Grade calculator" loading="lazy" /><figcaption>Grade calculator</figcaption></figure>
+      <figure class="shot"><img src="images/menu.jpg" alt="Menu" loading="lazy" /><figcaption>Menu</figcaption></figure>
+      <figure class="shot"><img src="images/harmonogram.jpg" alt="Harmonogram" loading="lazy" /><figcaption>Harmonogram</figcaption></figure>
     </div>
   </section>
 
